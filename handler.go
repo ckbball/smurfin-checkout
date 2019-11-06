@@ -2,6 +2,9 @@ package main
 
 import (
   "context"
+  "github.com/ThreeDotsLabs/watermill"
+  "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
+  "github.com/ThreeDotsLabs/watermill/message"
   catalogProto "github.com/ckbball/smurfin-catalog/proto/catalog"
   pb "github.com/ckbball/smurfin-checkout/proto/checkout"
 )
@@ -9,6 +12,8 @@ import (
 type handler struct {
   repo          repository
   catalogClient catalogProto.CatalogServiceClient
+  subscriber    message.Subscriber
+  publisher     message.Publisher
 }
 
 // Checkout - Receives transaction info and begins checkout process
@@ -33,7 +38,9 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
     AccountId:     cr.Item.Id,
   }
   // Send validate-payment event
-
+  // in main.go or event.go ?? setup the event broker to topic 'checkout'
+  // grab producer pointer
+  // send event
   // ****8 Maybe send response here saying process is under way and user will receive email with info when tx complete
   // Listen for PaymentSuccess event and then return response to client when received.
 

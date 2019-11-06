@@ -32,10 +32,11 @@ func main() {
   defer client.Disconnect(context.TODO())
 
   journalCollection := client.Database("smurfin").Collection("journal")
-  repository := &ItemRepository{
-    itemCollection,
+  repository := &JournalRepository{
+    journalCollection,
   }
-
+  catalogClient := catalogProto.NewCatalogServiceClient("smurfin.catalog.client", srv.Client())
+  h := &handler{repository, catalogClient, }
   pb.RegisterCheckoutServiceHandler(srv.Server(), &handler{repository})
 
   if err := srv.Run(); err != nil {

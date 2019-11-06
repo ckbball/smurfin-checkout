@@ -1,6 +1,13 @@
 package main
 
-import ()
+import (
+"context"
+  "log"
+  "time"
+"github.com/ThreeDotsLabs/watermill"
+  "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
+  "github.com/ThreeDotsLabs/watermill/message"
+)
 
 type PaymentInfo struct {
   Card_num int
@@ -29,3 +36,5 @@ type PaymentValidatedEvent struct {
   BuyerId   string
   AccountId string
 }
+
+func 
