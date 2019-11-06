@@ -38,9 +38,10 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
     AccountId:     cr.Item.Id,
   }
   // Send validate-payment event
-  // in main.go or event.go ?? setup the event broker to topic 'checkout'
-  // grab producer pointer
-  // send event
+  // gob encode vpEvent
+  // create watermill message with gob
+  // Publish message on checkout topic
+
   // ****8 Maybe send response here saying process is under way and user will receive email with info when tx complete
   // Listen for PaymentSuccess event and then return response to client when received.
 

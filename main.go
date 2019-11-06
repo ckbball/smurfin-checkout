@@ -25,6 +25,7 @@ func main() {
     uri = defaultHost
   }
 
+  // Will need to change for MySQL
   client, err := CreateClient(uri)
   if err != nil {
     log.Panic(err)
@@ -36,9 +37,24 @@ func main() {
     journalCollection,
   }
   catalogClient := catalogProto.NewCatalogServiceClient("smurfin.catalog.client", srv.Client())
-  h := &handler{repository, catalogClient, }
-  pb.RegisterCheckoutServiceHandler(srv.Server(), &handler{repository})
 
+  // Make subscriber config here
+  saramaSubscriberConfig := kafka.DefaultSaramaSubscriberConfig()
+  saramaSubscriberConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
+
+  // Make subscriber pointer here
+  subscriber := InitSubscriber(saramaSubscriberConfig)
+
+  // Make publisher pointer here
+  publisher := InitPublisher()
+
+  // Make handler here with stuff
+  h := &handler{repository, catalogClient, subscriber, publisher}
+
+  // Register handler and server
+  pb.RegisterCheckoutServiceHandler(srv.Server(), h)
+
+  // Run Server
   if err := srv.Run(); err != nil {
     fmt.Println(err)
   }
