@@ -1,0 +1,39 @@
+user will send checkout request with item id, payment info
+checkout will receive data
+checkout will make api call to catalog to confirm the correct item info
+checkout sends validate-payment event with payment info and item price
+payment receives info and processes the transaction and sends a payment-validated event with item id, and buyer id
+payment somehow processes adding new funds to the correct vendor account
+checkout receives payment confirmed event and returns a valid purchase to the client
+checkout sends email-payment-success-event with lol account info and user id
+email receieves event and sends the email to user with lol account info
+checkout sends remove-item event with item id and user id
+cart and catalog receive event and remove the respective item from their storages.
+
+checkout only needs one endpoint to receive order from client
+
+checkout publish events:
+  validate-payment (buyer_id, payment_info) ---> payment service
+  email-payment-success (buyer_id, account_id) ---> email service
+  remove-item (buyer_id, account_id) ---> cart service && catalog service
+
+checkout subscribe events:
+  payment-validated event (buyer_id, account_id) <--- payment service
+  0
+
+checkout will need:
+-   external api endpoint, POST to api/checkout, which will trigger the checkout process.
+-   an events system to pub/sub events
+-   local db for journal
+-
+
+
+NOTES FOR VENDOR-ACCOUNT RELATIONS
+account is the aggregate since multiple accounts per vendor, to find vendor's accounts go to account-db and lookup vendor_id == request_vendor_id
+
+PROBLEM
+how to get a validate payment event into the kafka message streams through watermill payloads as byte slice
+  SOLUTION?
+    use gob encoding
+    
+
