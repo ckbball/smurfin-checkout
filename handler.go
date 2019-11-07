@@ -9,6 +9,7 @@ import (
   "github.com/ThreeDotsLabs/watermill/message"
   catalogProto "github.com/ckbball/smurfin-catalog/proto/catalog"
   pb "github.com/ckbball/smurfin-checkout/proto/checkout"
+  "time"
 )
 
 type handler struct {
@@ -70,6 +71,36 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
   go FinishCheckout(s, cr, req.BuyerId)
 }
 
-func FinishCheckout(s *handler, catalog *catalogProto.Item, buyer_id string) {
+func FinishCheckout(s *handler, account *catalogProto.Item, buyer_id string) {
+  messages, err := s.subscriber.Subscribe(context.Background(), "payment.succes")
+  if err != nil {
+    log.Printf(err)
+  }
+  _ := process(messages, buyer_id, account.Id) //****** PROCESS ISNT COMPLETE NEED TO FIGURE OUT HOW TO PUT TIMEL LIMIT ON ITS EXECUTION
 
+  // send emailaccountevent
+  // send remove-account event to cart and catalog
+  // some other stuff i think
+}
+
+///  NOT COMPLETE - NEED TO FIGURE OUT HOW TO PUT TIME LIMIT ON EACH CALL TO PROCESS -------
+func process(messages <-chan *message.Message, buyer_id string, accountId string) bool {
+  timer := time.NewTimer(10 * time.Second)
+  for msg := range messages {
+    // decode msg payload back into struct
+    var network bytes.Buffer
+    var ps PaymentSuccessEvent
+    network.Write(msg.payload)
+    dec := gob.NewDecoder(&network)
+    err = dec.Decode(&ps)
+    if err != nil {
+      log.Fatal("decode error: ", err)
+    }
+    log.Printf("received message: %s, payload buyer_id: %s", msg.UUID, ps.BuyerId)
+    log.Printf("Checking if correct payload received. buyer id: %s || account: %s", buyer_id, accountId)
+    if ps.BuyerId == buyer_id && ps.AccountId == accountId {
+      return true
+    }
+  }
+  return false
 }

@@ -14,7 +14,7 @@ checkout only needs one endpoint to receive order from client
 
 checkout publish events:
   validate-payment (buyer_id, payment_info) ---> payment service
-  email-payment-success (buyer_id, account_id) ---> email service
+  EmailAccountEvent (buyer_id, account_info) ---> email service
   remove-item (buyer_id, account_id) ---> cart service && catalog service
 
 checkout subscribe events:
@@ -35,5 +35,5 @@ PROBLEM
 how to get a validate payment event into the kafka message streams through watermill payloads as byte slice
   SOLUTION?
     use gob encoding
-    
+
 
