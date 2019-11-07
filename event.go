@@ -27,12 +27,25 @@ type ValidatePaymentEvent struct {
   AccountId     string
 }
 
+type EmailAccountEvent struct {
+  BuyerId              string
+  AccountLogin         string
+  AccountPassword      string
+  AccountEmail         string
+  AccountEmailPassword string
+}
+
+type PaymentValidatedEvent struct {
+  BuyerId   string
+  AccountId string
+}
+
 type PaymentSuccessEvent struct {
   BuyerId   string
   AccountId string
 }
 
-type PaymentValidatedEvent struct {
+type RemoveItemEvent struct {
   BuyerId   string
   AccountId string
 }

@@ -37,3 +37,18 @@ how to get a validate payment event into the kafka message streams through water
     use gob encoding
 
 
+TO COMPLETE ACCOUNT PURCHASE CHECKOUT FLOW NEED TO IMPLEMENT ---->
+- email account info to buyer (email-service)
+- proccess transfer of correct funds to vendor (payment-service)
+- MAYBE MORE
+
+NEED TO DO CART-SERVICE
+
+NEED TO DO EMAIL SERVICE
+
+NEED TO DO USER SERVICE
+
+NEED TO DO VENDOR SERVICE
+
+NEED TO DO PAYMENT SERVICE
+

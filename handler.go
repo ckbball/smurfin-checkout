@@ -34,7 +34,7 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
   }
 
   // Construct data for validate-payment
-  vpEvent := ValidatePaymentEvent{
+  vpEvent := &ValidatePaymentEvent{
     BuyerId:       req.BuyerId,
     Info:          req.Card,
     AmountDollars: cr.Item.PriceDollars,
@@ -78,8 +78,65 @@ func FinishCheckout(s *handler, account *catalogProto.Item, buyer_id string) {
   }
   _ := process(messages, buyer_id, account.Id) //****** PROCESS ISNT COMPLETE NEED TO FIGURE OUT HOW TO PUT TIMEL LIMIT ON ITS EXECUTION
 
+  // create emailaccountevent
+  ea := &EmailAccountEvent{
+    BuyerId:              buyer_id,
+    AccountLogin:         account.Login,
+    AccountPassword:      account.LoginPassword,
+    AccountEmail:         account.Email,
+    AccountEmailPassword: account.Password,
+  }
+
   // send emailaccountevent
+  var network bytes.Buffer
+  enc := gob.NewEncoder(&network)
+  dec := gob.NewDecoder(&network)
+  err = enc.Encode(ea)
+  if err != nil {
+    log.Printf("error encoding EmailAccountEvent: ", err)
+  }
+  byteSlice := network.Bytes()
+  // create watermill message with gob
+  msg := message.NewMessage(watermill.NewUUID(), byteSlice)
+  // Publish message on email topic
+  if err = s.publisher.Publish("email.topic", msg); err != nil {
+    log.Printf("error publishing emailaccountevent: ", err)
+  }
+
+  // Add event to journal
+  err = s.repo.CreateJournalEntry(ea)
+  if err != nil {
+    log.Printf("error creating journal entry of EmailAccountEvent: ", err)
+  }
+
+  // Clear bytes buffer
+  _ = dec.Decode(&EmailAccountEvent{})
+  // create removeitemevent
+  ri := &RemoveItemEvent{
+    BuyerId:   buyer_id,
+    AccountId: account.Id,
+  }
   // send remove-account event to cart and catalog
+  err = enc.Encode(ri)
+  if err != nil {
+    log.Printf("error encoding RemoveItemEvent: ", err)
+  }
+  byteSlice = network.Bytes()
+  // create watermill message with gob
+  msg = message.NewMessage(watermill.NewUUID(), byteSlice)
+  // Publish message on remove topic
+  if err = s.publisher.Publish("remove.topic", msg); err != nil {
+    log.Printf("error publishing RemoveItemEvent: ", err)
+  }
+
+  // Add event to journal
+  err = s.repo.CreateJournalEntry(ri)
+  if err != nil {
+    log.Printf("error creating journal entry of RemoveItemEvent: ", err)
+  }
+
+  // Clear bytes buffer
+  _ = dec.Decode(&RemoveItemEvent{})
   // some other stuff i think
 }
 
