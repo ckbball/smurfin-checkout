@@ -1,7 +1,9 @@
 package main
 
 import (
+  "bytes"
   "context"
+  "encoding/gob"
   "github.com/ThreeDotsLabs/watermill"
   "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
   "github.com/ThreeDotsLabs/watermill/message"
@@ -21,6 +23,7 @@ type handler struct {
 // returns - a list of item(s)
 func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Response) error {
   // Make api call to catalog to validate item info
+  // returns a catalogProto.Item object
   cr, err := s.catalogClient.FindItems(ctx, &catalogProto.Specification{
     ItemId: req.AccountId,
   })
@@ -39,10 +42,34 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
   }
   // Send validate-payment event
   // gob encode vpEvent
+  var network bytes.Buffer
+  enc := gob.NewEncoder(&network)
+  err = enc.Encode(vpEvent)
+  if err != nil {
+    return err
+  }
+  byteSlice := network.Bytes()
   // create watermill message with gob
+  msg := message.NewMessage(watermill.NewUUID(), byteSlice)
   // Publish message on checkout topic
+  if err = s.publisher.Publish("checkout.topic", msg); err != nil {
+    return err
+  }
 
+  // Add event to journal
+  err = s.repo.CreateJournalEntry(vpEvent)
+  if err != nil {
+    return err
+  }
+  res.State = "Processing"
   // ****8 Maybe send response here saying process is under way and user will receive email with info when tx complete
   // Listen for PaymentSuccess event and then return response to client when received.
+
+  // Finishes all the background processing needed to complete checkout
+  // called as goroutine so the response can be sent back to client in a timely manner
+  go FinishCheckout(s, cr, req.BuyerId)
+}
+
+func FinishCheckout(s *handler, catalog *catalogProto.Item, buyer_id string) {
 
 }
