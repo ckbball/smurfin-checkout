@@ -1,9 +1,8 @@
 package main
 
 import (
-  "bytes"
   "context"
-  "encoding/gob"
+  "encoding/json"
   "github.com/ThreeDotsLabs/watermill"
   "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
   "github.com/ThreeDotsLabs/watermill/message"
@@ -42,16 +41,12 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
     AccountId:     cr.Item.Id,
   }
   // Send validate-payment event
-  // gob encode vpEvent
-  var network bytes.Buffer
-  enc := gob.NewEncoder(&network)
-  err = enc.Encode(vpEvent)
+  f, err = json.Marshal(vpEvent)
   if err != nil {
     return err
   }
-  byteSlice := network.Bytes()
   // create watermill message with gob
-  msg := message.NewMessage(watermill.NewUUID(), byteSlice)
+  msg := message.NewMessage(watermill.NewUUID(), f)
   // Publish message on checkout topic
   if err = s.publisher.Publish("checkout.topic", msg); err != nil {
     return err
@@ -87,15 +82,10 @@ func FinishCheckout(s *handler, account *catalogProto.Item, buyer_id string) {
     AccountEmailPassword: account.Password,
   }
 
-  // send emailaccountevent
-  var network bytes.Buffer
-  enc := gob.NewEncoder(&network)
-  dec := gob.NewDecoder(&network)
-  err = enc.Encode(ea)
+  byteSlice, err := json.Marshal(ea)
   if err != nil {
-    log.Printf("error encoding EmailAccountEvent: ", err)
+    log.Printf("Error encoding EmailAccountEvent: ", err)
   }
-  byteSlice := network.Bytes()
   // create watermill message with gob
   msg := message.NewMessage(watermill.NewUUID(), byteSlice)
   // Publish message on email topic
@@ -109,21 +99,18 @@ func FinishCheckout(s *handler, account *catalogProto.Item, buyer_id string) {
     log.Printf("error creating journal entry of EmailAccountEvent: ", err)
   }
 
-  // Clear bytes buffer
-  _ = dec.Decode(&EmailAccountEvent{})
   // create removeitemevent
   ri := &RemoveItemEvent{
     BuyerId:   buyer_id,
     AccountId: account.Id,
   }
   // send remove-account event to cart and catalog
-  err = enc.Encode(ri)
+  b, err = json.Marshal(ri)
   if err != nil {
     log.Printf("error encoding RemoveItemEvent: ", err)
   }
-  byteSlice = network.Bytes()
   // create watermill message with gob
-  msg = message.NewMessage(watermill.NewUUID(), byteSlice)
+  msg = message.NewMessage(watermill.NewUUID(), b)
   // Publish message on remove topic
   if err = s.publisher.Publish("remove.topic", msg); err != nil {
     log.Printf("error publishing RemoveItemEvent: ", err)
@@ -135,8 +122,6 @@ func FinishCheckout(s *handler, account *catalogProto.Item, buyer_id string) {
     log.Printf("error creating journal entry of RemoveItemEvent: ", err)
   }
 
-  // Clear bytes buffer
-  _ = dec.Decode(&RemoveItemEvent{})
   // some other stuff i think
 }
 
@@ -145,13 +130,9 @@ func process(messages <-chan *message.Message, buyer_id string, accountId string
   timer := time.NewTimer(10 * time.Second)
   for msg := range messages {
     // decode msg payload back into struct
-    var network bytes.Buffer
     var ps PaymentSuccessEvent
-    network.Write(msg.payload)
-    dec := gob.NewDecoder(&network)
-    err = dec.Decode(&ps)
-    if err != nil {
-      log.Fatal("decode error: ", err)
+    if err := json.Unmarshal(msg.Payload, &ps); err != nil {
+      log.Printf("Decode error process(): ", err)
     }
     log.Printf("received message: %s, payload buyer_id: %s", msg.UUID, ps.BuyerId)
     log.Printf("Checking if correct payload received. buyer id: %s || account: %s", buyer_id, accountId)

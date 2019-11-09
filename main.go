@@ -5,6 +5,7 @@ import (
   "fmt"
   pb "github.com/ckbball/smurfin-checkout/proto/checkout"
   "github.com/micro/go-micro"
+  "github.com/Shopify/sarama"
   "log"
   "os"
 )

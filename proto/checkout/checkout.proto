@@ -22,6 +22,7 @@ message Request {
   }
 
   string token = 5;
+  string buyer_email = 6;
 }
 
 message Response {

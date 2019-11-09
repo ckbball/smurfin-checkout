@@ -29,6 +29,7 @@ type ValidatePaymentEvent struct {
 
 type EmailAccountEvent struct {
   BuyerId              string
+  BuyerEmail           string
   AccountLogin         string
   AccountPassword      string
   AccountEmail         string
@@ -40,7 +41,9 @@ type PaymentValidatedEvent struct {
   AccountId string
 }
 
-type PaymentSuccessEvent struct {
+type PaymentProcessedEvent struct {
+  Status    string // if success this will == "Sucess" if fail this will == "Failed"
+  Message   string // if success this will == "Payment success. ---Whatever info payment api sends" if fail this will == the error message
   BuyerId   string
   AccountId string
 }
