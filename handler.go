@@ -8,6 +8,7 @@ import (
   "github.com/ThreeDotsLabs/watermill/message"
   catalogProto "github.com/ckbball/smurfin-catalog/proto/catalog"
   pb "github.com/ckbball/smurfin-checkout/proto/checkout"
+  paymentProto "github.com/ckbball/smurfin-payment/proto/payment"
   "time"
 )
 
@@ -32,20 +33,20 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
     return err
   }
 
-  // Construct data for validate-payment
-  vpEvent := &ValidatePaymentEvent{
+  // Construct data for payment requested
+  vpEvent := &PaymentRequestedEvent{
     BuyerId:       req.BuyerId,
     Info:          req.Card,
     AmountDollars: cr.Item.PriceDollars,
     AmountCents:   cr.Item.PriceCents,
     AccountId:     cr.Item.Id,
   }
-  // Send validate-payment event
+  // Marshal event
   f, err = json.Marshal(vpEvent)
   if err != nil {
     return err
   }
-  // create watermill message with gob
+  // create watermill message
   msg := message.NewMessage(watermill.NewUUID(), f)
   // Publish message on checkout topic
   if err = s.publisher.Publish("checkout.topic", msg); err != nil {
@@ -63,7 +64,9 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
 
   // Finishes all the background processing needed to complete checkout
   // called as goroutine so the response can be sent back to client in a timely manner
-  go FinishCheckout(s, cr, req.BuyerId)
+  // go FinishCheckout(s, cr, req.BuyerId)
+
+  return nil
 }
 
 func FinishCheckout(s *handler, account *catalogProto.Item, buyer_id string) {
@@ -72,6 +75,8 @@ func FinishCheckout(s *handler, account *catalogProto.Item, buyer_id string) {
     log.Printf(err)
   }
   _ := process(messages, buyer_id, account.Id) //****** PROCESS ISNT COMPLETE NEED TO FIGURE OUT HOW TO PUT TIMEL LIMIT ON ITS EXECUTION
+
+  // break this up more change process into a queue that calls another func when a message is recceived
 
   // create emailaccountevent
   ea := &EmailAccountEvent{
@@ -129,6 +134,8 @@ func FinishCheckout(s *handler, account *catalogProto.Item, buyer_id string) {
 func process(messages <-chan *message.Message, buyer_id string, accountId string) bool {
   timer := time.NewTimer(10 * time.Second)
   for msg := range messages {
+    // check metadata to see which event is being sent
+
     // decode msg payload back into struct
     var ps PaymentSuccessEvent
     if err := json.Unmarshal(msg.Payload, &ps); err != nil {

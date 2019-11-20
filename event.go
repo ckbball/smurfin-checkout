@@ -19,7 +19,8 @@ type PaymentInfo struct {
   Zip      int
 }
 
-type ValidatePaymentEvent struct {
+// publish event
+type PaymentRequestedEvent struct {
   BuyerId       string
   Info          PaymentInfo
   AmountDollars int
@@ -27,28 +28,20 @@ type ValidatePaymentEvent struct {
   AccountId     string
 }
 
-type EmailAccountEvent struct {
+// publish event
+type AccountPurchasedEvent struct {
   BuyerId              string
-  BuyerEmail           string
   AccountLogin         string
   AccountPassword      string
   AccountEmail         string
   AccountEmailPassword string
+  AccountId            string
 }
 
-type PaymentValidatedEvent struct {
-  BuyerId   string
-  AccountId string
-}
-
+// consumed event
 type PaymentProcessedEvent struct {
-  Status    string // if success this will == "Sucess" if fail this will == "Failed"
+  Status    string // if success this will == "sucess" if fail this will == "failed"
   Message   string // if success this will == "Payment success. ---Whatever info payment api sends" if fail this will == the error message
-  BuyerId   string
-  AccountId string
-}
-
-type RemoveItemEvent struct {
   BuyerId   string
   AccountId string
 }

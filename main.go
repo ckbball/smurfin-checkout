@@ -33,7 +33,7 @@ func main() {
   }
   defer client.Disconnect(context.TODO())
 
-  journalCollection := client.Database("smurfin").Collection("journal")
+  journalCollection := client.Database("smurfin-checkout").Collection("journal")
   repository := &JournalRepository{
     journalCollection,
   }
@@ -54,6 +54,14 @@ func main() {
 
   // Register handler and server
   pb.RegisterCheckoutServiceHandler(srv.Server(), h)
+
+  r := InitWaterRouter(publisher, subscriber, repository)
+
+  fmt.Println("Spinning up router")
+  go r.Run()
+  <- r.Running()
+  fmt.Println("Router is running")
+  // to check router is running
 
   // Run Server
   if err := srv.Run(); err != nil {

@@ -19,7 +19,17 @@ type JournalRepository struct {
 }
 
 func (repository *JournalRepository) CreateJournalEntry(event interface{}) error {
-  // Somehow determine which event it is, of the two
-  // Store it in db
-  // return error
+  v, ok := event.(*PaymentRequestedEvent)
+  if ok {
+    work := v
+    _, err = repository.collection.InsertOne(context.Background(), work)
+    return nil
+  }
+  w, ok := event.(*AccountPurchasedEvent)
+  if ok {
+    work := w
+    _, err = repository.collection.InsertOne(context.Background(), work)
+    return nil
+  }
+  return errors.New("Event does not match AccountTakenDownEvent or AccountSubmittedEvent in CreatingJournalEntry")
 }
