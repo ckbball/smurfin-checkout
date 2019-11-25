@@ -55,6 +55,7 @@ func main() {
   // Register handler and server
   pb.RegisterCheckoutServiceHandler(srv.Server(), h)
 
+  // create watermill router
   r := InitWaterRouter(publisher, subscriber, repository)
 
   fmt.Println("Spinning up router")

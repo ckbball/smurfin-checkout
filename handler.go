@@ -59,12 +59,6 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
     return err
   }
   res.State = "Processing"
-  // ****8 Maybe send response here saying process is under way and user will receive email with info when tx complete
-  // Listen for PaymentSuccess event and then return response to client when received.
-
-  // Finishes all the background processing needed to complete checkout
-  // called as goroutine so the response can be sent back to client in a timely manner
-  // go FinishCheckout(s, cr, req.BuyerId)
 
   return nil
 }
