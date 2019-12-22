@@ -97,6 +97,12 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) error {
 
 */
 
+/* Using Kafka As queue
+topic: checkout.queue
+in server.go start worker pool of consumers like one of watermill's examples
+somethin like this https://github.com/ThreeDotsLabs/watermill/blob/master/_examples/basic/2-realtime-feed/consumer/main.go
+*/
+
 /*
 Linked list 
 routine grabs head
