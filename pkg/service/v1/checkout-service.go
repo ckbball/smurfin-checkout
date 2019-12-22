@@ -26,6 +26,7 @@ import (
 
 const (
   apiVersion = "v1"
+  eventName = "account_purchased_event"
 )
 
 type handler struct {
@@ -63,15 +64,35 @@ func (s *handler) connect(ctx context.Context) (*sql.Conn, error) {
   return c, nil
 }
 
+/* Checkout handles api calls to grpc method Checkout and REST endpoint: /v1/checkout
+  Checkout is the process by which user purchases an account; sending account and card info
+  Input:
+  v1.Request{
+    fill in later
+  }
+  Output:
+  - Makes payment api call for the account
+  - Queues AccountPurchased event to be later published for other services
+  - returns any error generated or nil if no errors.
+*/
 func (s *handler) Checkout(ctx context.Context, req *v1.Request) error {
   // check api version
   if err := s.checkAPI(req.Api); err != nil {
-    return nil, err
+    return err
   }
 
   // confirm item info with grpc call
+  // will need to change to full get in future
+  item, err := s.catalogClient.GetById(ctx, &catalogProto.GetByIdRequest{
+    Id: req.AccountId,
+    })
+  if err != nil {
+    return err
+  }
+
 
   // send payment info to payment api
+  // boop boop
   /*
   card struct
   user_id
@@ -80,14 +101,38 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) error {
   */
 
   // queue account purchased event info, full item - buyer_id - ? maybe more
+  //private item info, buyerid, buyer email, item_id, vendor_id
+  event := &AccountPurchased{
+    PurchaseDate:         time.Now(),
+    AccountLoginName:     item.LoginName,
+    AccountLoginPassword: item.LoginPassword,
+    AccountEmail:         item.Email,
+    AccountEmailPassword: item.EmailPassword,
+    AccountId:            item.Id,
+    VendorId:             item.VendorId,
+    BuyerId:              req.BuyerId,
+    BuyerEmail:           req.BuyerEmail, 
+  }
 
-  // in queue functionality write each entry to file? or some sort of persistent store
+  f, err = json.Marshal(event)
+  if err != nil {
+    return err
+  }
+  // create watermill message
+  msg := message.NewMessage(watermill.NewUUID(), f)
+  // set message metadate
+  msg.Metadata.Set("event_type", eventName)
+  // Publish message on checkout topic
+  if err = s.publisher.Publish("checkout.topic", msg); err != nil {
+    return err
+  }
 
   // return
+  return nil
 }
 
 /* Steps for publisher worker
-1. Grab data from queue
+1. Grab data from kafka
 2. Build watermill message
 3. Publish message
 4. Create journal entry
