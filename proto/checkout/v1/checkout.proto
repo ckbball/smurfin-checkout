@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package checkout;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info: {
+    title: "checkout service";
+    version: "1.0";
+    contact: {
+      name: "checkout service";
+      url: "https://github.com/ckbball/smurfin-checkout";
+      email: "blah@happy.org";
+    };
+  };
+  schemes: HTTP;
+  schemes: HTTPS;
+  consumes: "application/json";
+  produces: "application/json";
+  responses: {
+    key: "404";
+    value: {
+      description: "Returned when resource doesn't exist";
+      schema: {
+        json_schema: {
+          type: STRING;
+        }
+      }
+    }
+  }
+};
+
+service CheckoutService {
+  rpc Checkout(Request) returns (Response) {
+    option (google.api.http) = {
+      post: "/v1/checkout",
+      body: "*"
+    };
+  }
+}
+
+message Request {
+  string id = 1;
+  string buyer_id = 2;
+  string account_id = 3;
+
+  message Card {
+    int32 card_num = 1;
+    int32 date_m = 2;
+    int32 date_y = 3;
+    int32 code = 4;
+    string first = 5;
+    string last = 6;
+    int32 zip = 7;
+  }
+
+  string token = 5;
+  string buyer_email = 6;
+  string api = 7;
+}
+
+message Response {
+  string state = 1;
+  string api = 2;
+}

@@ -54,7 +54,7 @@ func (s *handler) Checkout(ctx context.Context, req *pb.Request, res *pb.Respons
   }
 
   // Add event to journal
-  err = s.repo.CreateJournalEntry(vpEvent)
+  err = s.repo.CreateJournalEntry(ctx, vpEvent)
   if err != nil {
     return err
   }

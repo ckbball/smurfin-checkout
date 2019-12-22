@@ -3,9 +3,9 @@ package main
 import (
   "context"
   "fmt"
+  "github.com/Shopify/sarama"
   pb "github.com/ckbball/smurfin-checkout/proto/checkout"
   "github.com/micro/go-micro"
-  "github.com/Shopify/sarama"
   "log"
   "os"
 )
@@ -16,7 +16,7 @@ const (
 
 func main() {
   srv := micro.NewService(
-    micro.Name("smurfin.checkout")
+    micro.Name("smurfin.checkout"),
   )
 
   srv.Init()
@@ -60,7 +60,7 @@ func main() {
 
   fmt.Println("Spinning up router")
   go r.Run()
-  <- r.Running()
+  <-r.Running()
   fmt.Println("Router is running")
   // to check router is running
 
