@@ -7,14 +7,15 @@ import (
   "fmt"
 
   // mysql driver
+  "github.com/Shopify/sarama"
   "github.com/go-redis/cache/v7"
   "github.com/go-redis/redis/v7"
   _ "github.com/go-sql-driver/mysql"
   "github.com/vmihailenco/msgpack/v4"
 
-  "github.com/ckbball/smurfin-catalog/pkg/protocol/grpc"
-  "github.com/ckbball/smurfin-catalog/pkg/protocol/rest"
-  "github.com/ckbball/smurfin-catalog/pkg/service/v1"
+  "github.com/ckbball/smurfin-checkout/pkg/protocol/grpc"
+  "github.com/ckbball/smurfin-checkout/pkg/protocol/rest"
+  "github.com/ckbball/smurfin-checkout/pkg/service/v1"
 )
 
 // Config is configuration for Server
@@ -80,11 +81,21 @@ func RunServer() error {
   }
   defer db.Close()
   // create repository
-
+  repository := &JournalRepository{
+    db,
+  }
+  // init pool of connections to redis cluster
   redisPool := initRedis(cfg.RedisAddress)
-  // create subscriber handler
 
-  // create publisher handler
+  // Make subscriber config here
+  saramaSubscriberConfig := kafka.DefaultSaramaSubscriberConfig()
+  saramaSubscriberConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
+
+  // Make subscriber pointer here
+  subscriber := v1.InitSubscriber(saramaSubscriberConfig)
+
+  // Make publisher pointer here
+  publisher := v1.InitPublisher()
 
   // create handler that satisfies NewCatalogServiceServer interface
   h := &handler{repository, catalogClient, subscriber, publisher}

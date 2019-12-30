@@ -9,11 +9,11 @@ import (
 
   "google.golang.org/grpc"
 
-  v1 "github.com/ckbball/smurfin-catalog/pkg/api/v1"
+  v1 "github.com/ckbball/smurfin-checkout/pkg/api/v1"
 )
 
-// RunServer runs gRPC service to publish Catalog service
-func RunServer(ctx context.Context, v1API v1.CatalogServiceServer, port string) error {
+// RunServer runs gRPC service to publish Checkout service
+func RunServer(ctx context.Context, v1API v1.CheckoutServiceServer, port string) error {
   listen, err := net.Listen("tcp", ":"+port)
   if err != nil {
     return err
@@ -21,7 +21,7 @@ func RunServer(ctx context.Context, v1API v1.CatalogServiceServer, port string) 
 
   // register service
   server := grpc.NewServer()
-  v1.RegisterCatalogServiceServer(server, v1API)
+  v1.RegisterCheckoutServiceServer(server, v1API)
 
   // graceful shutdown
   c := make(chan os.Signal, 1)

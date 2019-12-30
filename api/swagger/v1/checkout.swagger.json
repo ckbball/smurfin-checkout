@@ -1,0 +1,93 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "checkout service",
+    "version": "1.0",
+    "contact": {
+      "name": "checkout service",
+      "url": "https://github.com/ckbball/smurfin-checkout",
+      "email": "blah@happy.org"
+    }
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/checkout": {
+      "post": {
+        "operationId": "Checkout",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/checkoutResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when resource doesn't exist",
+            "schema": {
+              "type": "string",
+              "format": "string"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/checkoutRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CheckoutService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "checkoutRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "buyer_id": {
+          "type": "string"
+        },
+        "account_id": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "buyer_email": {
+          "type": "string"
+        },
+        "api": {
+          "type": "string"
+        }
+      }
+    },
+    "checkoutResponse": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "api": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

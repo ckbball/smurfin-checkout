@@ -11,7 +11,7 @@ import (
   "github.com/grpc-ecosystem/grpc-gateway/runtime"
   "google.golang.org/grpc"
 
-  v1 "github.com/ckbball/smurfin-catalog/pkg/api/v1"
+  v1 "github.com/ckbball/smurfin-checkout/pkg/api/v1"
 )
 
 // RunServer runs HTTP/REST gateway
@@ -21,7 +21,8 @@ func RunServer(ctx context.Context, grpcPort, httpPort string) error {
 
   mux := runtime.NewServeMux()
   opts := []grpc.DialOption{grpc.WithInsecure()}
-  if err := v1.RegisterCatalogServiceHandlerFromEndpoint(ctx, mux, "localhost:"+grpcPort, opts); err != nil {
+  // have to change this for production maybe?
+  if err := v1.RegisterCheckoutServiceHandlerFromEndpoint(ctx, mux, "localhost:"+grpcPort, opts); err != nil {
     log.Fatalf("failed to start HTTP gateway: %v", err)
   }
 

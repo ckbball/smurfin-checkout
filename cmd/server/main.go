@@ -4,7 +4,7 @@ import (
   "fmt"
   "os"
 
-  "github.com/ckbball/smurfin-catalog/pkg/cmd"
+  "github.com/ckbball/smurfin-checkout/pkg/cmd"
 )
 
 func main() {
