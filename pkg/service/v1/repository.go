@@ -15,19 +15,22 @@ type JournalRepository struct {
 }
 
 func (repository *JournalRepository) CreateJournalEntry(ctx context.Context, event interface{}) error {
-  // Check if payment requested event was passed
-  v, ok := event.(*PaymentRequestedEvent)
-  if ok {
-    work := v
-
-    _, err = repository.db.InsertOne(context.Background(), work)
-    return nil
-  }
 
   w, ok := event.(*AccountPurchasedEvent)
   if ok {
     work := w
-    _, err = repository.db.InsertOne(context.Background(), work)
+    // get SQL connection
+    c, err := s.connect(ctx)
+    if err != nil {
+      return nil, err
+    }
+    defer c.Close()
+
+    res, err := c.ExecContext(ctx, `INSERT INTO items (VendorId, BlueEssence, RiotPoints, Solo, Flex, PriceDollars, PriceCents, Level, Email, Password, Login, LoginPassword) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      req.Item.VendorId, req.Item.BlueEssence, req.Item.RiotPoints, req.Item.Solo, req.Item.Flex, req.Item.PriceDollars, req.Item.PriceCents, req.Item.Level, req.Item.Email, req.Item.EmailPassword, req.Item.LoginName, req.Item.LoginPassword)
+    if err != nil {
+      return nil, status.Error(codes.Unknown, "failed to insert into item-> "+err.Error())
+    }
     return nil
   }
   return errors.New("Event does not match AccountTakenDownEvent or AccountSubmittedEvent in CreatingJournalEntry")
