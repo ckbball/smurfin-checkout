@@ -65,7 +65,7 @@ func (s *handler) connect(ctx context.Context) (*sql.Conn, error) {
 }
 
 /* Checkout handles api calls to grpc method Checkout and REST endpoint: /v1/checkout
-  Checkout is the process by which user purchases an account; sending account and card info
+  Checkout is the process by which a user purchases an account; sending account and card info
   Input:
   v1.Request{
     fill in later
