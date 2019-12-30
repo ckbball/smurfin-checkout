@@ -26,8 +26,8 @@ func (repository *JournalRepository) CreateJournalEntry(ctx context.Context, eve
     }
     defer c.Close()
 
-    res, err := c.ExecContext(ctx, `INSERT INTO items (VendorId, BlueEssence, RiotPoints, Solo, Flex, PriceDollars, PriceCents, Level, Email, Password, Login, LoginPassword) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      req.Item.VendorId, req.Item.BlueEssence, req.Item.RiotPoints, req.Item.Solo, req.Item.Flex, req.Item.PriceDollars, req.Item.PriceCents, req.Item.Level, req.Item.Email, req.Item.EmailPassword, req.Item.LoginName, req.Item.LoginPassword)
+    res, err := c.ExecContext(ctx, `INSERT INTO checkout_journal (PurchaseDate, AccountName, AccountPassword, AccountEmail, AccountEmailPassword, AccountId, VendorId, BuyerId, BuyerEmail) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      work.PurchaseDate, work.AccountName, work.AccountPassword, work.AccountEmail, work.AccountEmailPassword, work.AccountId, work.VendorId, work.BuyerId, work.BuyerEmail)
     if err != nil {
       return nil, status.Error(codes.Unknown, "failed to insert into item-> "+err.Error())
     }
