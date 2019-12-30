@@ -79,10 +79,17 @@ func RunServer() error {
     return fmt.Errorf("failed to open database: %v", err)
   }
   defer db.Close()
+  // create repository
 
   redisPool := initRedis(cfg.RedisAddress)
+  // create subscriber handler
 
-  v1API := v1.NewCatalogServiceServer(db, redisPool)
+  // create publisher handler
+
+  // create handler that satisfies NewCatalogServiceServer interface
+  h := &handler{repository, catalogClient, subscriber, publisher}
+
+  v1API := v1.NewCheckoutServiceServer(h)
 
   // run http gateway
   go func() {
