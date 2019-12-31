@@ -21,108 +21,45 @@ func main() {
 
   var body string
 
-  // Call Create
-  resp, err := http.Post(*address+"/v1/catalogs", "application/json", strings.NewReader(fmt.Sprintf(`
+  // Call Checkout
+  resp, err := http.Post(*address+"/v1/checkout", "application/json", strings.NewReader(fmt.Sprintf(`
     {
       "api":"v1",
-      "item": {
-        "vendor_id":"3",
-        "blue_essence":10000,
-        "solo":3,
-        "email": "bobby@gmail.com",
-        "password": "haha"
-      }
+      "buyer_id": "2",
+      "account_id": "3",
+      "card": {
+        "card_num":1234567890123456,
+        "date_m":"03",
+        "date_y":"22",
+        "code":333,
+        "first": "bobby",
+        "last": "McFlannagan",
+        "zip": 88333
+      },
+      "buyer_email": "bobby@gmail.com"
     }
   `, pfx, pfx, pfx)))
   if err != nil {
-    log.Fatalf("failed to call Create method: %v", err)
+    log.Fatalf("failed to call Checkout method: %v", err)
   }
   bodyBytes, err := ioutil.ReadAll(resp.Body)
   resp.Body.Close()
   if err != nil {
-    body = fmt.Sprintf("failed read Create response body: %v", err)
+    body = fmt.Sprintf("failed read Checkout response body: %v", err)
   } else {
     body = string(bodyBytes)
   }
-  log.Printf("Create response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
+  log.Printf("Checkout response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
-  // parse ID of created ToDo
+  // parse status of checkout
   var created struct {
-    API string `json:"api"`
-    ID  string `json:"id"`
+    API    string `json:"api"`
+    Status string `json:"state"`
   }
   err = json.Unmarshal(bodyBytes, &created)
   if err != nil {
-    log.Fatalf("failed to unmarshal JSON response of Create method: %v", err)
+    log.Fatalf("failed to unmarshal JSON response of Checkout method: %v", err)
     fmt.Println("error:", err)
   }
-
-  // Call Search
-  resp, err = http.Post(*address+"/v1/catalogs/search", "application/json", strings.NewReader(fmt.Sprintf(`
-    {
-      "api":"v1",
-      "solo": 3,
-      "flex": 2,
-      "page": 1,
-      "limit": 20
-    }
-  `, pfx, pfx, pfx)))
-  if err != nil {
-    log.Fatalf("failed to call Create method: %v", err)
-  }
-  bodyBytes, err = ioutil.ReadAll(resp.Body)
-  resp.Body.Close()
-  if err != nil {
-    body = fmt.Sprintf("failed read Search response body: %v", err)
-  } else {
-    body = string(bodyBytes)
-  }
-  log.Printf("Search response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
-
-  // Call List
-  resp, err = http.Post(*address+"/v1/catalogs/list", "application/json", strings.NewReader(fmt.Sprintf(`
-    {
-      "api":"v1",
-      "page": 1,
-      "limit": 20
-    }
-  `, pfx, pfx, pfx)))
-  bodyBytes, err = ioutil.ReadAll(resp.Body)
-  resp.Body.Close()
-  if err != nil {
-    body = fmt.Sprintf("failed read List response body: %v", err)
-  } else {
-    body = string(bodyBytes)
-  }
-  log.Printf("List response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
-
-  // Call Read
-  resp, err = http.Get(fmt.Sprintf("%s%s/%s", *address, "/v1/catalogs", created.ID))
-  if err != nil {
-    log.Fatalf("failed to call Read method: %v", err)
-  }
-  bodyBytes, err = ioutil.ReadAll(resp.Body)
-  resp.Body.Close()
-  if err != nil {
-    body = fmt.Sprintf("failed read Read response body: %v", err)
-  } else {
-    body = string(bodyBytes)
-  }
-  log.Printf("Read response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
-
-  // Call Delete
-  req, err := http.NewRequest("DELETE", fmt.Sprintf("%s%s/%s", *address, "/v1/catalogs", created.ID), nil)
-  resp, err = http.DefaultClient.Do(req)
-  if err != nil {
-    log.Fatalf("failed to call Delete method: %v", err)
-  }
-  bodyBytes, err = ioutil.ReadAll(resp.Body)
-  resp.Body.Close()
-  if err != nil {
-    body = fmt.Sprintf("failed read Delete response body: %v", err)
-  } else {
-    body = string(bodyBytes)
-  }
-  log.Printf("Delete response: Code=%d, Body=%s\n\n", resp.StatusCode, body)
 
 }

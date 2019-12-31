@@ -48,8 +48,8 @@ message Request {
 
   message Card {
     int32 card_num = 1;
-    int32 date_m = 2;
-    int32 date_y = 3;
+    string date_m = 2;
+    string date_y = 3;
     int32 code = 4;
     string first = 5;
     string last = 6;
