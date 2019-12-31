@@ -6,6 +6,7 @@ import (
   "fmt"
   "strconv"
   "time"
+  "log"
 
   //"github.com/golang/protobuf/ptypes"
   "github.com/go-redis/cache/v7"
@@ -75,7 +76,7 @@ func (s *handler) connect(ctx context.Context) (*sql.Conn, error) {
   - Queues AccountPurchased event to be later published for other services
   - returns any error generated or nil if no errors.
 */
-func (s *handler) Checkout(ctx context.Context, req *v1.Request) error {
+func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, error) {
   // check api version
   if err := s.checkAPI(req.Api); err != nil {
     return err
@@ -83,12 +84,15 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) error {
 
   // confirm item info with grpc call
   // will need to change to full get in future
-  item, err := s.catalogClient.GetById(ctx, &catalogProto.GetByIdRequest{
+  catalogResponse, err := s.catalogClient.GetById(ctx, &catalogProto.GetByIdRequest{
     Id: req.AccountId,
     })
   if err != nil {
     return err
   }
+  log.Printf("Received response from catalog: response:%s\n", catalogResponse)
+
+  item := catalogResponse.Item
 
 
   // send payment info to payment api
@@ -126,9 +130,13 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) error {
   if err = s.publisher.Publish("checkout.topic", msg); err != nil {
     return err
   }
+  
 
   // return
-  return nil
+  return &v1.Response{
+    Api:  apiVersion,
+    State: "Processing",
+  }, nil
 }
 
 /* Steps for publisher worker

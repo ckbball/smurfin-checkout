@@ -61,5 +61,5 @@ func main() {
     log.Fatalf("failed to unmarshal JSON response of Checkout method: %v", err)
     fmt.Println("error:", err)
   }
-
+  log.Printf("created struct: %s\n", created)
 }

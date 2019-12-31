@@ -6,13 +6,13 @@ import (
 )
 
 type AccountPurchased struct {
-  PurchaseDate         int64
-  AccountLoginName     string
-  AccountLoginPassword string
-  AccountEmail         string
-  AccountEmailPassword string
-  AccountId            string
-  VendorId             string
-  BuyerId              string
-  BuyerEmail           string
+  PurchaseDate         int64  `json:"purchase_date"`
+  AccountLoginName     string `json:"account_login_name"`
+  AccountLoginPassword string `json:"account_login_password"`
+  AccountEmail         string `json:"account_email"`
+  AccountEmailPassword string `json:"account_email_password"`
+  AccountId            string `json:"account_id"`
+  VendorId             string `json:"vendor_id"`
+  BuyerId              string `json:"buyer_id"`
+  BuyerEmail           string `json:"buyer_email"`
 }

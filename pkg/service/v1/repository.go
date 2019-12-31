@@ -16,7 +16,7 @@ type JournalRepository struct {
 
 func (repository *JournalRepository) CreateJournalEntry(ctx context.Context, event interface{}) error {
 
-  w, ok := event.(*AccountPurchasedEvent)
+  w, ok := event.(*AccountPurchased)
   if ok {
     work := w
     // get SQL connection
@@ -26,14 +26,14 @@ func (repository *JournalRepository) CreateJournalEntry(ctx context.Context, eve
     }
     defer c.Close()
 
-    res, err := c.ExecContext(ctx, `INSERT INTO checkout_journal (PurchaseDate, AccountName, AccountPassword, AccountEmail, AccountEmailPassword, AccountId, VendorId, BuyerId, BuyerEmail) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      work.PurchaseDate, work.AccountName, work.AccountPassword, work.AccountEmail, work.AccountEmailPassword, work.AccountId, work.VendorId, work.BuyerId, work.BuyerEmail)
+    res, err := c.ExecContext(ctx, `INSERT INTO checkout_journal (purchase_date, account_login_name, account_login_password, account_email, account_email_password, account_id, vendor_id, buyer_id, buyer_email) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      work.PurchaseDate, work.AccountLoginName, work.AccountLoginPassword, work.AccountEmail, work.AccountEmailPassword, work.AccountId, work.VendorId, work.BuyerId, work.BuyerEmail)
     if err != nil {
       return nil, status.Error(codes.Unknown, "failed to insert into item-> "+err.Error())
     }
     return nil
   }
-  return errors.New("Event does not match AccountTakenDownEvent or AccountSubmittedEvent in CreatingJournalEntry")
+  return errors.New("Event does not match AccountPurchased in CreatingJournalEntry")
 }
 
 func (s *JournalRepository) connect(ctx context.Context) (*sql.Conn, error) {
