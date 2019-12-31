@@ -9,7 +9,7 @@ import (
   //"github.com/golang/protobuf/ptypes"
   "google.golang.org/grpc"
 
-  v1 "github.com/ckbball/smurfin-catalog/pkg/api/v1"
+  v1 "github.com/ckbball/smurfin-checkout/pkg/api/v1"
 )
 
 const (
@@ -29,7 +29,7 @@ func main() {
   }
   defer conn.Close()
 
-  c := v1.NewCatalogServiceClient(conn)
+  c := v1.NewCheckoutServiceClient(conn)
 
   ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
   defer cancel()

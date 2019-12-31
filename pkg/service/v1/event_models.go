@@ -6,9 +6,9 @@ import (
 )
 
 type AccountPurchased struct {
-  PurchaseDate         time.Time
-  AccountName          string
-  AccountPassword      string
+  PurchaseDate         int64
+  AccountLoginName     string
+  AccountLoginPassword string
   AccountEmail         string
   AccountEmailPassword string
   AccountId            string

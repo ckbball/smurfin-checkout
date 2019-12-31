@@ -26,7 +26,7 @@ import (
 
 const (
   apiVersion = "v1"
-  eventName = "account_purchased_event"
+  eventName = "account_purchased"
 )
 
 type handler struct {
@@ -103,7 +103,7 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) error {
   // queue account purchased event info, full item - buyer_id - ? maybe more
   //private item info, buyerid, buyer email, item_id, vendor_id
   event := &AccountPurchased{
-    PurchaseDate:         time.Now(),
+    PurchaseDate:         time.Now().Unix(),
     AccountLoginName:     item.LoginName,
     AccountLoginPassword: item.LoginPassword,
     AccountEmail:         item.Email,
