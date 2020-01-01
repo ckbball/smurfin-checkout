@@ -2,7 +2,7 @@ package v1
 
 import (
   "context"
-  "database/sql"
+  "errors"
   "log"
   "strconv"
   "time"
@@ -34,7 +34,7 @@ type handler struct {
 }
 
 func NewCheckoutServiceServer(repo repository, catalogClient catalogProto.CatalogServiceClient,
-  subscriber message.Subscriber, publisher message.Publisher) handler {
+  subscriber message.Subscriber, publisher message.Publisher) *handler {
   return &handler{
     repo:          repo,
     catalogClient: catalogClient,
@@ -72,7 +72,10 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
 
   // confirm item info with grpc call
   // will need to change to full get in future
-  account_id_int64 := strconv.ParseInt(req.AccountId, 10, 64)
+  account_id_int64, err := strconv.ParseInt(req.AccountId, 10, 64)
+  if err != nil {
+    return nil, errors.New("Invalid Id. Not a proper int")
+  }
   catalogResponse, err := s.catalogClient.GetById(ctx, &catalogProto.GetByIdRequest{
     Id: account_id_int64,
   })
