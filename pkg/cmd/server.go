@@ -5,18 +5,21 @@ import (
   "database/sql"
   "flag"
   "fmt"
+  "log"
 
   // mysql driver
   "github.com/Shopify/sarama"
+  "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
   "github.com/go-redis/cache/v7"
   "github.com/go-redis/redis/v7"
   _ "github.com/go-sql-driver/mysql"
   "github.com/vmihailenco/msgpack/v4"
+  "google.golang.org/grpc"
 
-  catalogService "github.com/ckbball/smurfin-checkout/pkg/api/v1"
-  "github.com/ckbball/smurfin-checkout/pkg/protocol/grpc"
+  catalogService "github.com/ckbball/smurfin-catalog/pkg/api/v1"
+  checkGrpc "github.com/ckbball/smurfin-checkout/pkg/protocol/grpc"
   "github.com/ckbball/smurfin-checkout/pkg/protocol/rest"
-  "github.com/ckbball/smurfin-checkout/pkg/service/v1"
+  v1 "github.com/ckbball/smurfin-checkout/pkg/service/v1"
 )
 
 // Config is configuration for Server
@@ -86,11 +89,11 @@ func RunServer() error {
   }
   defer db.Close()
   // create repository
-  repository := &JournalRepository{
-    db,
+  repository := &v1.JournalRepository{
+    Db: db,
   }
   // init pool of connections to redis cluster
-  redisPool := initRedis(cfg.RedisAddress)
+  // redisPool := initRedis(cfg.RedisAddress)
 
   // Make subscriber config here
   saramaSubscriberConfig := kafka.DefaultSaramaSubscriberConfig()
@@ -104,7 +107,7 @@ func RunServer() error {
 
   // Connect to catalog service
   // Set up a connection to the server.
-  conn, err := grpc.Dial(*CatalogServiceAddress, grpc.WithInsecure())
+  conn, err := grpc.Dial(cfg.CatalogServiceAddress, grpc.WithInsecure())
   if err != nil {
     log.Fatalf("did not connect: %v", err)
   }
@@ -112,17 +115,15 @@ func RunServer() error {
 
   catalogClient := catalogService.NewCatalogServiceClient(conn)
 
-  // create handler that satisfies NewCatalogServiceServer interface
-  h := &handler{repository, catalogClient, subscriber, publisher}
-
-  v1API := v1.NewCheckoutServiceServer(h)
+  // pass in fields of handler directly to method
+  v1API := v1.NewCheckoutServiceServer(repository, catalogClient, subscriber, publisher)
 
   // run http gateway
   go func() {
     _ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort)
   }()
 
-  return grpc.RunServer(ctx, v1API, cfg.GRPCPort)
+  return checkGrpc.RunServer(ctx, v1API, cfg.GRPCPort)
 }
 
 func initRedis(address string) *cache.Codec {

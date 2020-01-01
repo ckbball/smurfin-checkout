@@ -11,10 +11,11 @@ type repository interface {
 }
 
 type JournalRepository struct {
-  db *sql.DB
+  Db *sql.DB
 }
 
-func (repository *JournalRepository) CreateJournalEntry(ctx context.Context, event interface{}) error {
+func (repository *JournalRepository) CreateJournalEntry(event interface{}) error {
+  ctx := context.Background()
 
   w, ok := event.(*AccountPurchased)
   if ok {
@@ -37,7 +38,7 @@ func (repository *JournalRepository) CreateJournalEntry(ctx context.Context, eve
 }
 
 func (s *JournalRepository) connect(ctx context.Context) (*sql.Conn, error) {
-  c, err := s.db.Conn(ctx)
+  c, err := s.Db.Conn(ctx)
   if err != nil {
     return nil, err
   }
