@@ -1,15 +1,16 @@
 package v1
 
 import (
-  "context"
+  //"context"
+  "github.com/Shopify/sarama"
   "github.com/ThreeDotsLabs/watermill"
   "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
-  "github.com/ThreeDotsLabs/watermill/message"
-  "log"
-  "time"
+  //"github.com/ThreeDotsLabs/watermill/message"
+  //"log"
+  //"time"
 )
 
-func InitSubscriber(config kafka.SubscriberConfig) *kafka.Subscriber {
+func InitSubscriber(config *sarama.Config) *kafka.Subscriber {
   subscriber, err := kafka.NewSubscriber(
     kafka.SubscriberConfig{
       Brokers:               []string{"kafka:9092"},

@@ -3,31 +3,27 @@ package v1
 import (
   "context"
   "database/sql"
-  "fmt"
+  "log"
   "strconv"
   "time"
-  "log"
 
   //"github.com/golang/protobuf/ptypes"
-  "github.com/go-redis/cache/v7"
-  "google.golang.org/grpc/codes"
-  "google.golang.org/grpc/status"
-  "context"
   "encoding/json"
   "github.com/ThreeDotsLabs/watermill"
-  "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
   "github.com/ThreeDotsLabs/watermill/message"
+  // "github.com/go-redis/cache/v7"
+  "google.golang.org/grpc/codes"
+  "google.golang.org/grpc/status"
 
   catalogProto "github.com/ckbball/smurfin-catalog/pkg/api/v1"
-  paymentProto "github.com/ckbball/smurfin-payment/pkg/api/v1"
-  "time"
+  //paymentProto "github.com/ckbball/smurfin-payment/pkg/api/v1"
 
   v1 "github.com/ckbball/smurfin-checkout/pkg/api/v1"
 )
 
 const (
   apiVersion = "v1"
-  eventName = "account_purchased"
+  eventName  = "account_purchased"
 )
 
 type handler struct {
@@ -38,12 +34,12 @@ type handler struct {
 }
 
 func NewCheckoutServiceServer(repo repository, catalogClient catalogProto.CatalogServiceClient,
- subscriber message.Subscriber, publisher message.Publisher) {
+  subscriber message.Subscriber, publisher message.Publisher) handler {
   return &handler{
-    repo: repo, 
+    repo:          repo,
     catalogClient: catalogClient,
-    subscriber: subscriber,
-    publisher: publisher
+    subscriber:    subscriber,
+    publisher:     publisher,
   }
 }
 
@@ -57,24 +53,16 @@ func (s *handler) checkAPI(api string) error {
   return nil
 }
 
-func (s *handler) connect(ctx context.Context) (*sql.Conn, error) {
-  c, err := s.repo.Conn(ctx)
-  if err != nil {
-    return nil, status.Error(codes.Unknown, "failed to connect to database-> "+err.Error())
-  }
-  return c, nil
-}
-
 /* Checkout handles api calls to grpc method Checkout and REST endpoint: /v1/checkout
-  Checkout is the process by which a user purchases an account; sending account and card info
-  Input:
-  v1.Request{
-    fill in later
-  }
-  Output:
-  - Makes payment api call for the account
-  - Queues AccountPurchased event to be later published for other services
-  - returns any error generated or nil if no errors.
+Checkout is the process by which a user purchases an account; sending account and card info
+Input:
+v1.Request{
+  fill in later
+}
+Output:
+- Makes payment api call for the account
+- Queues AccountPurchased event to be later published for other services
+- returns any error generated or nil if no errors.
 */
 func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, error) {
   // check api version
@@ -84,8 +72,9 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
 
   // confirm item info with grpc call
   // will need to change to full get in future
+  account_id_int64 := strconv.ParseInt(req.AccountId, 10, 64)
   catalogResponse, err := s.catalogClient.GetById(ctx, &catalogProto.GetByIdRequest{
-    Id: req.AccountId,
+    Id: account_id_int64,
   })
   if err != nil {
     log.Printf("Error in catalog.GetById()")
@@ -95,14 +84,13 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
 
   item := catalogResponse.Item
 
-
   // send payment info to payment api
   // boop boop
   /*
-  card struct
-  user_id
-  item_id
-  ? maybe more
+     card struct
+     user_id
+     item_id
+     ? maybe more
   */
 
   // queue account purchased event info, full item - buyer_id - ? maybe more
@@ -113,10 +101,10 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
     AccountLoginPassword: item.LoginPassword,
     AccountEmail:         item.Email,
     AccountEmailPassword: item.EmailPassword,
-    AccountId:            item.Id,
+    AccountId:            req.AccountId,
     VendorId:             item.VendorId,
     BuyerId:              req.BuyerId,
-    BuyerEmail:           req.BuyerEmail, 
+    BuyerEmail:           req.BuyerEmail,
   }
 
   f, err = json.Marshal(event)
@@ -132,11 +120,11 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
     return nil, err
   }
 
-
   // return
   return &v1.Response{
-    Api:  apiVersion,
+    Api:   apiVersion,
     State: "Processing",
+    // maybe in future add more data to response about the purchased item.
   }, nil
 }
 
@@ -149,7 +137,7 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
 
 /* Queue functionality, FIFO
 
-*/
+ */
 
 /* Using Kafka As queue
 topic: checkout.queue
@@ -158,7 +146,7 @@ somethin like this https://github.com/ThreeDotsLabs/watermill/blob/master/_examp
 */
 
 /*
-Linked list 
+Linked list
 routine grabs head
 locks head
 gets value from head and moves pointer to next value in queue

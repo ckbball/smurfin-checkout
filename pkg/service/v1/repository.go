@@ -3,7 +3,6 @@ package v1
 import (
   "context"
   "database/sql"
-  "fmt"
 )
 
 type repository interface {
@@ -20,16 +19,16 @@ func (repository *JournalRepository) CreateJournalEntry(ctx context.Context, eve
   if ok {
     work := w
     // get SQL connection
-    c, err := s.connect(ctx)
+    c, err := repository.connect(ctx)
     if err != nil {
-      return nil, err
+      return err
     }
     defer c.Close()
 
     res, err := c.ExecContext(ctx, `INSERT INTO checkout_journal (purchase_date, account_login_name, account_login_password, account_email, account_email_password, account_id, vendor_id, buyer_id, buyer_email) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       work.PurchaseDate, work.AccountLoginName, work.AccountLoginPassword, work.AccountEmail, work.AccountEmailPassword, work.AccountId, work.VendorId, work.BuyerId, work.BuyerEmail)
     if err != nil {
-      return nil, status.Error(codes.Unknown, "failed to insert into item-> "+err.Error())
+      return errors.New("Error inserting journal to checkout: ", err)
     }
     return nil
   }
