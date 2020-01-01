@@ -18,7 +18,7 @@ services:
       DB_USER: dev
       DB_PASSWORD: dev-user5
       DB_SCHEMA: checkout
-      CATALOG_ADDRESS: localhost:9090
+      CATALOG_ADDRESS: host.docker.internal:9090
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest

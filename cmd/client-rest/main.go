@@ -26,7 +26,7 @@ func main() {
     {
       "api":"v1",
       "buyer_id": "2",
-      "account_id": "3",
+      "account_id": "5",
       "card": {
         "card_num":1234567890123456,
         "date_m":"03",

@@ -3,6 +3,7 @@ package v1
 import (
   "context"
   "errors"
+  "fmt"
   "log"
   "strconv"
   "time"
@@ -12,6 +13,7 @@ import (
   "github.com/ThreeDotsLabs/watermill"
   "github.com/ThreeDotsLabs/watermill/message"
   // "github.com/go-redis/cache/v7"
+  "google.golang.org/grpc"
   "google.golang.org/grpc/codes"
   "google.golang.org/grpc/status"
 
@@ -33,13 +35,13 @@ type handler struct {
   publisher         message.Publisher
 }
 
-func NewCheckoutServiceServer(repo repository, catalogClient catalogProto.CatalogServiceClient,
+func NewCheckoutServiceServer(repo repository, catalogSvcAddress string,
   subscriber message.Subscriber, publisher message.Publisher) *handler {
   return &handler{
-    repo:          repo,
-    catalogClient: catalogClient,
-    subscriber:    subscriber,
-    publisher:     publisher,
+    repo:              repo,
+    catalogSvcAddress: catalogSvcAddress,
+    subscriber:        subscriber,
+    publisher:         publisher,
   }
 }
 
@@ -76,7 +78,14 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
   if err != nil {
     return nil, errors.New("Invalid Id. Not a proper int")
   }
-  catalogResponse, err := s.catalogClient.GetById(ctx, &catalogProto.GetByIdRequest{
+  // add stats handler to dialcontext when u know what it does
+  conn, err := grpc.DialContext(ctx, s.catalogSvcAddress, grpc.WithInsecure())
+  if err != nil {
+    return nil, fmt.Errorf("could not connect catalog service: %+v", err)
+  }
+  defer conn.Close()
+
+  catalogResponse, err := catalogProto.NewCatalogServiceClient(conn).GetById(ctx, &catalogProto.GetByIdRequest{
     Id: account_id_int64,
   })
   if err != nil {

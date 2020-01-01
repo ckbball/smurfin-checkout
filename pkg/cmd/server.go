@@ -5,7 +5,6 @@ import (
   "database/sql"
   "flag"
   "fmt"
-  "log"
   "os"
 
   // mysql driver
@@ -15,9 +14,7 @@ import (
   "github.com/go-redis/redis/v7"
   _ "github.com/go-sql-driver/mysql"
   "github.com/vmihailenco/msgpack/v4"
-  "google.golang.org/grpc"
 
-  catalogService "github.com/ckbball/smurfin-catalog/pkg/api/v1"
   checkGrpc "github.com/ckbball/smurfin-checkout/pkg/protocol/grpc"
   "github.com/ckbball/smurfin-checkout/pkg/protocol/rest"
   v1 "github.com/ckbball/smurfin-checkout/pkg/service/v1"
@@ -117,18 +114,22 @@ func RunServer() error {
   // Make publisher pointer here
   publisher := v1.InitPublisher()
 
-  // Connect to catalog service
-  // Set up a connection to the server.
-  conn, err := grpc.Dial(cfg.CatalogServiceAddress, grpc.WithInsecure())
-  if err != nil {
-    log.Fatalf("did not connect: %v", err)
-  }
-  defer conn.Close()
+  // deprecated for now as it is better to create conn in handler
+  // so you don't have to deal with server connection issues.
+  /*
+     // Connect to catalog service
+     // Set up a connection to the server.
+     conn, err := grpc.Dial(cfg.CatalogServiceAddress, grpc.WithInsecure())
+     if err != nil {
+       log.Fatalf("did not connect: %v", err)
+     }
+     defer conn.Close()
 
-  catalogClient := catalogService.NewCatalogServiceClient(conn)
+     catalogClient := catalogService.NewCatalogServiceClient(conn)
+  */
 
   // pass in fields of handler directly to method
-  v1API := v1.NewCheckoutServiceServer(repository, catalogClient, subscriber, publisher)
+  v1API := v1.NewCheckoutServiceServer(repository, cfg.CatalogServiceAddress, subscriber, publisher)
 
   // run http gateway
   go func() {
