@@ -13,6 +13,7 @@ import (
   _ "github.com/go-sql-driver/mysql"
   "github.com/vmihailenco/msgpack/v4"
 
+  catalogService "github.com/ckbball/smurfin-checkout/pkg/api/v1"
   "github.com/ckbball/smurfin-checkout/pkg/protocol/grpc"
   "github.com/ckbball/smurfin-checkout/pkg/protocol/rest"
   "github.com/ckbball/smurfin-checkout/pkg/service/v1"
@@ -38,6 +39,9 @@ type Config struct {
   DatastoreDBSchema string
   // address for single redis node
   RedisAddress string
+
+  // catalog service address
+  CatalogServiceAddress string
 }
 
 // RunServer runs gRPC server and HTTP gateway
@@ -53,6 +57,7 @@ func RunServer() error {
   flag.StringVar(&cfg.DatastoreDBPassword, "db-password", "", "Database password")
   flag.StringVar(&cfg.DatastoreDBSchema, "db-schema", "", "Database schema")
   flag.StringVar(&cfg.RedisAddress, "redis-address", "", "Redis address")
+  flag.StringVar(&cfg.CatalogServiceAddress, "catalog-service-address", "", "Catalog service address")
   flag.Parse()
 
   if len(cfg.GRPCPort) == 0 {
@@ -96,6 +101,16 @@ func RunServer() error {
 
   // Make publisher pointer here
   publisher := v1.InitPublisher()
+
+  // Connect to catalog service
+  // Set up a connection to the server.
+  conn, err := grpc.Dial(*CatalogServiceAddress, grpc.WithInsecure())
+  if err != nil {
+    log.Fatalf("did not connect: %v", err)
+  }
+  defer conn.Close()
+
+  catalogClient := catalogService.NewCatalogServiceClient(conn)
 
   // create handler that satisfies NewCatalogServiceServer interface
   h := &handler{repository, catalogClient, subscriber, publisher}

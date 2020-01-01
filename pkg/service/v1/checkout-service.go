@@ -79,16 +79,17 @@ func (s *handler) connect(ctx context.Context) (*sql.Conn, error) {
 func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, error) {
   // check api version
   if err := s.checkAPI(req.Api); err != nil {
-    return err
+    return nil, err
   }
 
   // confirm item info with grpc call
   // will need to change to full get in future
   catalogResponse, err := s.catalogClient.GetById(ctx, &catalogProto.GetByIdRequest{
     Id: req.AccountId,
-    })
+  })
   if err != nil {
-    return err
+    log.Printf("Error in catalog.GetById()")
+    return nil, err
   }
   log.Printf("Received response from catalog: response:%s\n", catalogResponse)
 
@@ -120,7 +121,7 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
 
   f, err = json.Marshal(event)
   if err != nil {
-    return err
+    return nil, err
   }
   // create watermill message
   msg := message.NewMessage(watermill.NewUUID(), f)
@@ -128,9 +129,9 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
   msg.Metadata.Set("event_type", eventName)
   // Publish message on checkout topic
   if err = s.publisher.Publish("checkout.topic", msg); err != nil {
-    return err
+    return nil, err
   }
-  
+
 
   // return
   return &v1.Response{
