@@ -110,7 +110,7 @@ func (s *handler) Checkout(ctx context.Context, req *v1.Request) (*v1.Response, 
     BuyerEmail:           req.BuyerEmail,
   }
 
-  f, err = json.Marshal(event)
+  f, err := json.Marshal(event)
   if err != nil {
     return nil, err
   }
