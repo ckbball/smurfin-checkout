@@ -6,6 +6,7 @@ import (
   "flag"
   "fmt"
   "log"
+  "os"
 
   // mysql driver
   "github.com/Shopify/sarama"
@@ -62,6 +63,17 @@ func RunServer() error {
   flag.StringVar(&cfg.RedisAddress, "redis-address", "", "Redis address")
   flag.StringVar(&cfg.CatalogServiceAddress, "catalog-service-address", "", "Catalog service address")
   flag.Parse()
+
+  if len(cfg.GRPCPort) == 0 {
+    cfg.GRPCPort = os.Getenv("GRPC_PORT")
+    cfg.HTTPPort = os.Getenv("HTTP_PORT")
+    cfg.DatastoreDBHost = os.Getenv("DB_HOST")
+    cfg.DatastoreDBUser = os.Getenv("DB_USER")
+    cfg.DatastoreDBPassword = os.Getenv("DB_PASSWORD")
+    cfg.DatastoreDBSchema = os.Getenv("DB_SCHEMA")
+    cfg.RedisAddress = os.Getenv("REDIS_ADDRESS")
+    cfg.CatalogServiceAddress = os.Getenv("CATALOG_ADDRESS")
+  }
 
   if len(cfg.GRPCPort) == 0 {
     return fmt.Errorf("invalid TCP port for gRPC server: '%s'", cfg.GRPCPort)

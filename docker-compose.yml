@@ -1,5 +1,25 @@
 version: '3'
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    networks:
+      - default
+    environment:
+      GRPC_PORT: 9091
+      HTTP_PORT: 8080
+      DB_HOST: blah
+      DB_USER: dev
+      DB_PASSWORD: dev-user5
+      DB_SCHEMA: checkout
+      CATALOG_ADDRESS: localhost:9090
+
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     restart: unless-stopped

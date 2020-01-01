@@ -27,10 +27,10 @@ const (
 )
 
 type handler struct {
-  repo          repository
-  catalogClient catalogProto.CatalogServiceClient
-  subscriber    message.Subscriber
-  publisher     message.Publisher
+  repo              repository
+  catalogSvcAddress string
+  subscriber        message.Subscriber
+  publisher         message.Publisher
 }
 
 func NewCheckoutServiceServer(repo repository, catalogClient catalogProto.CatalogServiceClient,
